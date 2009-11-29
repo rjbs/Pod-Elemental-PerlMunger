@@ -1,6 +1,8 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+
+0.093330  2009-11-29 08:43:08 America/New_York
           throw exception if PPI parsing fails
 
 0.093020  2009-10-28
