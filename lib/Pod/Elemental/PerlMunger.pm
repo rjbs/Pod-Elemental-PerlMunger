@@ -47,6 +47,7 @@ around munge_perl_string => sub {
   my ($orig, $self, $perl, $arg) = @_;
 
   my $ppi_document = PPI::Document->new(\$perl);
+  confess(PPI::Document->errstr) unless $ppi_document;
 
   my @pod_tokens = map {"$_"} @{ $ppi_document->find('PPI::Token::Pod') || [] };
   $ppi_document->prune('PPI::Token::Pod');

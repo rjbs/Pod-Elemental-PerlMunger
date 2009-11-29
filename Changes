@@ -1,0 +1,7 @@
+Revision history for {{$dist->name}}
+
+{{$NEXT}}
+          throw exception if PPI parsing fails
+
+0.093020  2009-10-28
+          first release
