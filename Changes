@@ -1,6 +1,8 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+          some speed improvements by changing how we use PPI (thanks, Dave
+          Rolsky!)
 
 0.093330  2009-11-29 08:43:08 America/New_York
           throw exception if PPI parsing fails
