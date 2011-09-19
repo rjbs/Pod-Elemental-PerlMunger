@@ -39,6 +39,7 @@ C<%doc>.
 
 use namespace::autoclean;
 
+use List::MoreUtils qw(any);
 use PPI;
 
 requires 'munge_perl_string';
@@ -52,7 +53,15 @@ around munge_perl_string => sub {
   my @pod_tokens = map {"$_"} @{ $ppi_document->find('PPI::Token::Pod') || [] };
   $ppi_document->prune('PPI::Token::Pod');
 
-  if ($ppi_document->serialize =~ /^=[a-z]/m) {
+  my $finder = sub {
+    my $node = $_[1];
+    return 0 unless any { $node->isa($_) }
+       qw( PPI::Token::Quote PPI::Token::QuoteLike PPI::Token::HereDoc );
+    return 1 if $node->content =~ /^=[a-z]/m;
+    return 0;
+  };
+
+  if ($ppi_document->find_first($finder)) {
     $self->log(
       sprintf "can't invoke %s on %s: there is POD inside string literals",
         $self->plugin_name,
@@ -77,13 +86,20 @@ around munge_perl_string => sub {
   my $new_pod = $doc->{pod}->as_pod_string;
 
   my $end = do {
-    my $end_elem = $doc->{ppi}->find('PPI::Statement::Data')
-                || $doc->{ppi}->find('PPI::Statement::End');
+    my $finder = sub {
+      return 1 if $_[1]->isa('PPI::Statement::End') || $_[1]->isa('PPI::Statement::Data');
+      return 0;
+    };
+    my $end_elem = $doc->{ppi}->find($finder);
     join q{}, @{ $end_elem || [] };
   };
 
-  $doc->{ppi}->prune('PPI::Statement::End');
-  $doc->{ppi}->prune('PPI::Statement::Data');
+  my $pruner = sub {
+    return 1 if $_[1]->isa('PPI::Statement::End') || $_[1]->isa('PPI::Statement::Data');
+    return 0;
+  };
+
+  $doc->{ppi}->prune($pruner);
 
   my $new_perl = $doc->{ppi}->serialize;
 
