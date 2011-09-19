@@ -39,6 +39,7 @@ C<%doc>.
 
 use namespace::autoclean;
 
+use List::MoreUtils qw(any);
 use PPI;
 
 requires 'munge_perl_string';
@@ -52,7 +53,15 @@ around munge_perl_string => sub {
   my @pod_tokens = map {"$_"} @{ $ppi_document->find('PPI::Token::Pod') || [] };
   $ppi_document->prune('PPI::Token::Pod');
 
-  if ($ppi_document->serialize =~ /^=[a-z]/m) {
+  my $finder = sub {
+    my $node = $_[1];
+    return 0 unless any { $node->isa($_) }
+       qw( PPI::Token::Quote PPI::Token::QuoteLike PPI::Token::HereDoc );
+    return 1 if $node->content =~ /^=[a-z]/m;
+    return 0;
+  };
+
+  if ($ppi_document->find_first($finder)) {
     $self->log(
       sprintf "can't invoke %s on %s: there is POD inside string literals",
         $self->plugin_name,
