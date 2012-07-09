@@ -107,9 +107,11 @@ around munge_perl_string => sub {
 
   my $new_perl = $doc->{ppi}->serialize;
 
+  s/\n\s*\z// for $new_perl, $new_pod;
+
   return defined $end
          ? "$new_perl\n\n$new_pod\n\n$end"
-         : "$new_perl\n__END__\n\n$new_pod\n";
+         : "$new_perl\n\n__END__\n\n$new_pod\n";
 };
 
 1;
