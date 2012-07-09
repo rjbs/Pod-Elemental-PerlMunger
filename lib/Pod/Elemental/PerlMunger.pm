@@ -85,27 +85,33 @@ around munge_perl_string => sub {
 
   my $new_pod = $doc->{pod}->as_pod_string;
 
-  my $end = do {
-    my $finder = sub {
-      return 1 if $_[1]->isa('PPI::Statement::End') || $_[1]->isa('PPI::Statement::Data');
-      return 0;
-    };
-    my $end_elem = $doc->{ppi}->find($finder);
-    join q{}, @{ $end_elem || [] };
-  };
-
-  my $pruner = sub {
+  my $end_finder = sub {
     return 1 if $_[1]->isa('PPI::Statement::End') || $_[1]->isa('PPI::Statement::Data');
     return 0;
   };
 
-  $doc->{ppi}->prune($pruner);
+  my $end = do {
+    my $end_elem = $doc->{ppi}->find($end_finder);
+
+    # If there's nothing after __END__, we can put the POD there:
+    if (not $end_elem or (@$end_elem == 1 and
+                          $end_elem->[0]->isa('PPI::Statement::End') and
+                          $end_elem->[0] =~ /^__END__\s*\z/)) {
+      $end_elem = [];
+    }
+
+    @$end_elem ? join q{}, @$end_elem : undef;
+  };
+
+  $doc->{ppi}->prune($end_finder);
 
   my $new_perl = $doc->{ppi}->serialize;
 
-  return $end
+  s/\n\s*\z// for $new_perl, $new_pod;
+
+  return defined $end
          ? "$new_perl\n\n$new_pod\n\n$end"
-         : "$new_perl\n__END__\n$new_pod\n";
+         : "$new_perl\n\n__END__\n\n$new_pod\n";
 };
 
 1;

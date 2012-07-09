@@ -1,6 +1,9 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+          if there's nothing after __END__ but whitespace (after removing POD)
+          then place the munged POD there.  Also, place a blank line
+          between __END__ and the POD (thanks, Christopher J. Madsen!)
 
 0.093331  2011-09-19 15:52:00 America/New_York
           some speed improvements by changing how we use PPI (thanks, Dave
