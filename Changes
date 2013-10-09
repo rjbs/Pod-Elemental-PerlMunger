@@ -2,6 +2,9 @@ Revision history for {{$dist->name}}
 
 {{$NEXT}}
 
+0.093333  2013-10-09 17:17:00 America/New_York
+          update bugtracker and repo data
+
 0.093332  2012-08-24 21:03:56 America/New_York
           if there's nothing after __END__ but whitespace (after removing POD)
           then place the munged POD there.  Also, place a blank line
