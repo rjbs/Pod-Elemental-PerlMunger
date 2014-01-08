@@ -1,6 +1,8 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+
+0.100000  2014-01-07 20:02:01-05:00 America/New_York
         - encode character string input into octets for PPI, then ensure output
           is also characters
 
