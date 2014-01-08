@@ -16,6 +16,8 @@ this:
 
   $object->munge_perl_string($perl_string, \%arg);
 
+C<$perl_string> should be a character string containing Perl source code.
+
 C<%arg> may contain any input for the underlying procedure.  The only key with
 associated meaning is C<filename> which may be omitted.  If given, it should be
 the name of the file whose contents are being munged.
@@ -30,7 +32,7 @@ to be called like this:
 C<%doc> will have two entries:
 
   ppi - a PPI::Document of the Perl document with all its Pod removed
-  pod - a Pod::Document with no transformations yet performed
+  pod - a Pod::Elemental::Document with no transformations yet performed
 
 This C<munge_perl_string> method should return a hashref in the same format as
 C<%doc>.
@@ -39,6 +41,7 @@ C<%doc>.
 
 use namespace::autoclean;
 
+use Encode ();
 use List::MoreUtils qw(any);
 use PPI;
 
@@ -47,7 +50,9 @@ requires 'munge_perl_string';
 around munge_perl_string => sub {
   my ($orig, $self, $perl, $arg) = @_;
 
-  my $ppi_document = PPI::Document->new(\$perl);
+  my $perl_utf8 = Encode::encode('utf-8', $perl, Encode::FB_CROAK);
+
+  my $ppi_document = PPI::Document->new(\$perl_utf8);
   confess(PPI::Document->errstr) unless $ppi_document;
 
   my @pod_tokens = map {"$_"} @{ $ppi_document->find('PPI::Token::Pod') || [] };
@@ -105,7 +110,11 @@ around munge_perl_string => sub {
 
   $doc->{ppi}->prune($end_finder);
 
-  my $new_perl = $doc->{ppi}->serialize;
+  my $new_perl = Encode::decode(
+    'utf-8',
+    $doc->{ppi}->serialize,
+    Encode::FB_CROAK,
+  );
 
   s/\n\s*\z// for $new_perl, $new_pod;
 
