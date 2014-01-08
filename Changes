@@ -1,6 +1,8 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+        - encode character string input into octets for PPI, then ensure output
+          is also characters
 
 0.093333  2013-10-09 17:17:00 America/New_York
           update bugtracker and repo data

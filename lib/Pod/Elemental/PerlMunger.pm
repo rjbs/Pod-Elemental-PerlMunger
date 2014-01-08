@@ -22,7 +22,8 @@ C<%arg> may contain any input for the underlying procedure.  The only key with
 associated meaning is C<filename> which may be omitted.  If given, it should be
 the name of the file whose contents are being munged.
 
-The method will return a string containing the rewritten and combined document.
+The method will return a character string containing the rewritten and combined
+document.
 
 Classes including this role must implement a C<munge_perl_string> that expects
 to be called like this:
