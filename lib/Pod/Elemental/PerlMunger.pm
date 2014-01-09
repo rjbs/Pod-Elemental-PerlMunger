@@ -49,6 +49,41 @@ use PPI;
 
 requires 'munge_perl_string';
 
+has replacer => (
+  is  => 'ro',
+  default => 'replace_with_nothing',
+);
+
+sub replacements_for {
+  my ($self, $element) = @_;
+
+  my $replacer = $self->replacer;
+  return $self->$replacer($element);
+}
+
+sub replace_with_nothing { return }
+
+sub replace_with_comment {
+  my ($self, $element) = @_;
+
+  my $text = "$element";
+
+  (my $pod = $text) =~ s/^/# /mg;
+  my $commented_out = PPI::Token::Comment->new($pod);
+
+  return $commented_out;
+}
+
+sub replace_with_blank {
+  my ($self, $element) = @_;
+
+  my $text = "$element";
+  my @lines = split /\n/, $text;
+  my $blank = PPI::Token::Whitespace->new("\n" x (@lines));
+
+  return $blank;
+}
+
 around munge_perl_string => sub {
   my ($orig, $self, $perl, $arg) = @_;
 
@@ -64,17 +99,17 @@ around munge_perl_string => sub {
     my @queue = $ppi_document->children;
     while (my $element = shift @queue) {
       if ($element->isa('PPI::Token::Pod')) {
-        # Delete the child
+        my @replacements = $self->replacements_for($element);
+
+        # save the text for use in building the Pod-only document
         push @pod_tokens, "$element";
 
-        my @lines = split /\n/, $pod_tokens[-1];
-        my $blank = "\n" x (@lines);
-        # my $replace_with = PPI::Token::Whitespace->new($blank);
-
-        (my $pod = $pod_tokens[-1]) =~ s/^/# /mg;
-        my $replace_with = PPI::Token::Comment->new($pod);
-
-        my $ok = $element->insert_after($replace_with);
+        my $last = $element;
+        while (my $next = shift @replacements) {
+          my $ok = $last->insert_after($next);
+          confess("error inserting replacement!") unless $ok;
+          $last = $next;
+        }
 
         $element->delete;
 

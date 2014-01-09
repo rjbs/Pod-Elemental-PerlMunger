@@ -34,7 +34,7 @@ sub test
 
   local $Test::Builder::Level = $Test::Builder::Level + 1;
 
-  eq_or_diff(Pod_Identity->munge_perl_string($in), $out, $name);
+  eq_or_diff(Pod_Identity->new->munge_perl_string($in), $out, $name);
 }
 
 #=====================================================================
