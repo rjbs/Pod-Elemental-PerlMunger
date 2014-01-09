@@ -44,9 +44,45 @@ use namespace::autoclean;
 
 use Encode ();
 use List::MoreUtils qw(any);
+use Params::Util qw(_INSTANCE);
 use PPI;
 
 requires 'munge_perl_string';
+
+has replacer => (
+  is  => 'ro',
+  default => 'replace_with_nothing',
+);
+
+sub replacements_for {
+  my ($self, $element) = @_;
+
+  my $replacer = $self->replacer;
+  return $self->$replacer($element);
+}
+
+sub replace_with_nothing { return }
+
+sub replace_with_comment {
+  my ($self, $element) = @_;
+
+  my $text = "$element";
+
+  (my $pod = $text) =~ s/^/# /mg;
+  my $commented_out = PPI::Token::Comment->new($pod);
+
+  return $commented_out;
+}
+
+sub replace_with_blank {
+  my ($self, $element) = @_;
+
+  my $text = "$element";
+  my @lines = split /\n/, $text;
+  my $blank = PPI::Token::Whitespace->new("\n" x (@lines));
+
+  return $blank;
+}
 
 around munge_perl_string => sub {
   my ($orig, $self, $perl, $arg) = @_;
@@ -56,8 +92,36 @@ around munge_perl_string => sub {
   my $ppi_document = PPI::Document->new(\$perl_utf8);
   confess(PPI::Document->errstr) unless $ppi_document;
 
-  my @pod_tokens = map {"$_"} @{ $ppi_document->find('PPI::Token::Pod') || [] };
-  $ppi_document->prune('PPI::Token::Pod');
+  # Use a depth-first queue search
+  my @pod_tokens;
+
+  {
+    my @queue = $ppi_document->children;
+    while (my $element = shift @queue) {
+      if ($element->isa('PPI::Token::Pod')) {
+        my @replacements = $self->replacements_for($element);
+
+        # save the text for use in building the Pod-only document
+        push @pod_tokens, "$element";
+
+        my $last = $element;
+        while (my $next = shift @replacements) {
+          my $ok = $last->insert_after($next);
+          confess("error inserting replacement!") unless $ok;
+          $last = $next;
+        }
+
+        $element->delete;
+
+        next;
+      }
+
+      if ( _INSTANCE($element, 'PPI::Node') ) {
+        # Depth-first keeps the queue size down
+        unshift @queue, $element->children;
+      }
+    }
+  }
 
   my $finder = sub {
     my $node = $_[1];
