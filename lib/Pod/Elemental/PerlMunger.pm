@@ -44,6 +44,7 @@ use namespace::autoclean;
 
 use Encode ();
 use List::MoreUtils qw(any);
+use Params::Util qw(_INSTANCE);
 use PPI;
 
 requires 'munge_perl_string';
@@ -56,8 +57,32 @@ around munge_perl_string => sub {
   my $ppi_document = PPI::Document->new(\$perl_utf8);
   confess(PPI::Document->errstr) unless $ppi_document;
 
-  my @pod_tokens = map {"$_"} @{ $ppi_document->find('PPI::Token::Pod') || [] };
-  $ppi_document->prune('PPI::Token::Pod');
+  # Use a depth-first queue search
+  my @pod_tokens;
+
+  {
+    my @queue = $ppi_document->children;
+    while (my $element = shift @queue) {
+      if ($element->isa('PPI::Token::Pod')) {
+        # Delete the child
+        push @pod_tokens, "$element";
+
+        my @lines = split /\n/, $pod_tokens[-1];
+        my $blank = "\n" x (@lines);
+        my $replace_with = PPI::Token::Whitespace->new($blank);
+        my $ok = $element->insert_after($replace_with);
+
+        $element->delete;
+
+        next;
+      }
+
+      if ( _INSTANCE($element, 'PPI::Node') ) {
+        # Depth-first keeps the queue size down
+        unshift @queue, $element->children;
+      }
+    }
+  }
 
   my $finder = sub {
     my $node = $_[1];
