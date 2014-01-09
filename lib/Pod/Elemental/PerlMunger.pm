@@ -69,7 +69,11 @@ around munge_perl_string => sub {
 
         my @lines = split /\n/, $pod_tokens[-1];
         my $blank = "\n" x (@lines);
-        my $replace_with = PPI::Token::Whitespace->new($blank);
+        # my $replace_with = PPI::Token::Whitespace->new($blank);
+
+        (my $pod = $pod_tokens[-1]) =~ s/^/# /mg;
+        my $replace_with = PPI::Token::Comment->new($pod);
+
         my $ok = $element->insert_after($replace_with);
 
         $element->delete;
