@@ -1,6 +1,9 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+        - it's now possible to replace Pod with something rather than nothing
+          when it's extracted from your document; check out the "replacer"
+          attribute
 
 0.100000  2014-01-07 20:02:01-05:00 America/New_York
         - encode character string input into octets for PPI, then ensure output
