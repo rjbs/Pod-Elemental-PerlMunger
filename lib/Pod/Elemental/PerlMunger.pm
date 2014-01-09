@@ -49,41 +49,6 @@ use PPI;
 
 requires 'munge_perl_string';
 
-has replacer => (
-  is  => 'ro',
-  default => 'replace_with_nothing',
-);
-
-sub replacements_for {
-  my ($self, $element) = @_;
-
-  my $replacer = $self->replacer;
-  return $self->$replacer($element);
-}
-
-sub replace_with_nothing { return }
-
-sub replace_with_comment {
-  my ($self, $element) = @_;
-
-  my $text = "$element";
-
-  (my $pod = $text) =~ s/^/# /mg;
-  my $commented_out = PPI::Token::Comment->new($pod);
-
-  return $commented_out;
-}
-
-sub replace_with_blank {
-  my ($self, $element) = @_;
-
-  my $text = "$element";
-  my @lines = split /\n/, $text;
-  my $blank = PPI::Token::Whitespace->new("\n" x (@lines));
-
-  return $blank;
-}
-
 around munge_perl_string => sub {
   my ($orig, $self, $perl, $arg) = @_;
 
@@ -99,7 +64,7 @@ around munge_perl_string => sub {
     my @queue = $ppi_document->children;
     while (my $element = shift @queue) {
       if ($element->isa('PPI::Token::Pod')) {
-        my @replacements = $self->replacements_for($element);
+        my @replacements = $self->_replacements_for($element);
 
         # save the text for use in building the Pod-only document
         push @pod_tokens, "$element";
@@ -187,5 +152,96 @@ around munge_perl_string => sub {
          ? "$new_perl\n\n$new_pod\n\n$end"
          : "$new_perl\n\n__END__\n\n$new_pod\n";
 };
+
+=attr replacer
+
+The replacer is either a method name or code reference used to produces PPI
+elements used to replace removed Pod.  By default, it is
+C<L</replace_with_nothing>>, which just removes Pod tokens entirely.  This
+means that the line numbers of the code in the newly-produced document are
+changed, if the Pod had been interleaved with the code.
+
+See also C<L</replace_with_comment>> and C<L</replace_with_blank>>.
+
+=cut
+
+has replacer => (
+  is  => 'ro',
+  default => 'replace_with_nothing',
+);
+
+sub _replacements_for {
+  my ($self, $element) = @_;
+
+  my $replacer = $self->replacer;
+  return $self->$replacer($element);
+}
+
+=method replace_with_nothing
+
+This method returns nothing.  It's the default C<L</replacer>>.  It's not very
+interesting.
+
+=cut
+
+sub replace_with_nothing { return }
+
+=method replace_with_comment
+
+This replacer replaces removed Pod elements with a comment containing their
+text.  In other words:
+
+  =head1 A header!
+
+  This is great!
+
+  =cut
+
+...is replaced with:
+
+  # =head1 A header!
+  #
+  # This is great!
+  #
+  # =cut
+
+=cut
+
+sub replace_with_comment {
+  my ($self, $element) = @_;
+
+  my $text = "$element";
+
+  (my $pod = $text) =~ s/^/# /mg;
+  my $commented_out = PPI::Token::Comment->new($pod);
+
+  return $commented_out;
+}
+
+=method replace_with_blank
+
+This replacer replaces removed Pod elements with vertical whitespace of equal
+line count.  In other words:
+
+  =head1 A header!
+
+  This is great!
+
+  =cut
+
+...is replaced with five blank lines.
+
+=cut
+
+sub replace_with_blank {
+  my ($self, $element) = @_;
+
+  my $text = "$element";
+  my @lines = split /\n/, $text;
+  my $blank = PPI::Token::Whitespace->new("\n" x (@lines));
+
+  return $blank;
+}
+
 
 1;
