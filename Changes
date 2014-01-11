@@ -1,6 +1,8 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+
+0.200000  2014-01-11 14:23:46-05:00 America/New_York
         - it's now possible to replace Pod with something rather than nothing
           when it's extracted from your document; check out the "replacer"
           attribute
