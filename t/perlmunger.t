@@ -6,7 +6,7 @@ use Test::More;
 # Load Test::Differences, if available:
 BEGIN {
   # SUGGEST PREREQ: Test::Differences
-  if (eval "use Test::Differences; 1") {
+  if (0 and eval "use Test::Differences; 1") {
     # Not all versions of Test::Differences support changing the style:
     eval { Test::Differences::unified_diff() }
   } else {
@@ -63,7 +63,17 @@ test 'pod mid-code' => "mid-code.in.txt", "mid-code.out.txt";
 # was gross.  This test identified the bug, now fixed i Pod::Elemental.
 test 'pod mid-code, with =pod' => "mid-code-pod.in.txt", "mid-code-pod.out.txt";
 
-test 'pod mid-code, with =pod' => "mid-code.in.txt", "mid-code-comm.out.txt",
+test 'pod mid-code, replace with comments',
+     "mid-code.in.txt", "mid-code-comm.out.txt",
      { replacer => 'replace_with_comment' };
+
+test 'pod straddles code, replace with comments',
+     "straddle-code.in.txt", "straddle-code-comm.out.txt",
+     { replacer => 'replace_with_comment' };
+
+test 'pod straddles code, replace with comments',
+     "straddle-code.in.txt", "straddle-code-comm-nothing.out.txt",
+     { replacer => 'replace_with_comment',
+       post_code_replacer => 'replace_with_nothing' };
 
 done_testing;

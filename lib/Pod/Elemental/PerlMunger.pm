@@ -43,7 +43,7 @@ C<%doc>.
 use namespace::autoclean;
 
 use Encode ();
-use List::MoreUtils qw(any);
+use List::AllUtils qw(any max);
 use Params::Util qw(_INSTANCE);
 use PPI;
 
@@ -57,14 +57,33 @@ around munge_perl_string => sub {
   my $ppi_document = PPI::Document->new(\$perl_utf8);
   confess(PPI::Document->errstr) unless $ppi_document;
 
-  # Use a depth-first queue search
+  my $last_code_elem;
+  my $code_elems = $ppi_document->find(sub {
+    return if grep { $_[1]->isa("PPI::Token::$_") }
+                    qw(Comment Pod Whitespace Separator Data End);
+    return 1;
+  });
+
+  $code_elems ||= [];
+  for my $elem (@$code_elems) {
+    # Really, we might get two elements on the same line, and one could be
+    # later in position because it could have a later column — but we don't
+    # care, because we're only thinking about Pod, which is linewise.
+    next if $last_code_elem
+        and $elem->line_number <= $last_code_elem->line_number;
+
+    $last_code_elem = $elem;
+  }
+
   my @pod_tokens;
 
   {
     my @queue = $ppi_document->children;
     while (my $element = shift @queue) {
       if ($element->isa('PPI::Token::Pod')) {
-        my @replacements = $self->_replacements_for($element);
+        my $after_last = $last_code_elem
+                      && $last_code_elem->line_number > $element->line_number;
+        my @replacements = $self->_replacements_for($element, $after_last);
 
         # save the text for use in building the Pod-only document
         push @pod_tokens, "$element";
@@ -164,6 +183,17 @@ changed, if the Pod had been interleaved with the code.
 
 See also C<L</replace_with_comment>> and C<L</replace_with_blank>>.
 
+If no further code follows the Pod being replaced, C<L</post_code_replacer>> is
+used instead.
+
+=attr post_code_replacer
+
+This attribute is used just like C<L</replacer>>, and defaults to its value,
+but is used for building replacements for Pod removed after the last hunk of
+code.  The idea is that if you're only concerned about altering your code's
+line numbers, you can stop replacing stuff after there's no more code to be
+affected.
+
 =cut
 
 has replacer => (
@@ -171,10 +201,16 @@ has replacer => (
   default => 'replace_with_nothing',
 );
 
-sub _replacements_for {
-  my ($self, $element) = @_;
+has post_code_replacer => (
+  is   => 'ro',
+  lazy => 1,
+  default => sub { $_[0]->replacer },
+);
 
-  my $replacer = $self->replacer;
+sub _replacements_for {
+  my ($self, $element, $after_last) = @_;
+
+  my $replacer = $after_last ? $self->replacer : $self->post_code_replacer;
   return $self->$replacer($element);
 }
 
