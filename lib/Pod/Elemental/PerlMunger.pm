@@ -213,7 +213,8 @@ sub replace_with_comment {
 
   my $text = "$element";
 
-  (my $pod = $text) =~ s/^/# /mg;
+  (my $pod = $text) =~ s/^(.)/# $1/mg;
+  $pod =~ s/^$/#/mg;
   my $commented_out = PPI::Token::Comment->new($pod);
 
   return $commented_out;
