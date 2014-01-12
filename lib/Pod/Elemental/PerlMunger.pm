@@ -121,7 +121,8 @@ around munge_perl_string => sub {
   my $new_pod = $doc->{pod}->as_pod_string;
 
   my $end_finder = sub {
-    return 1 if $_[1]->isa('PPI::Statement::End') || $_[1]->isa('PPI::Statement::Data');
+    return 1 if $_[1]->isa('PPI::Statement::End')
+             || $_[1]->isa('PPI::Statement::Data');
     return 0;
   };
 
