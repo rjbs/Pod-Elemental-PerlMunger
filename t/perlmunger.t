@@ -30,19 +30,21 @@ BEGIN {
 #---------------------------------------------------------------------
 sub test
 {
-  my ($name, $in, $out) = @_;
+  my ($name, $in, $out, $arg) = @_;
 
   local $Test::Builder::Level = $Test::Builder::Level + 1;
 
   open my $in_fh, "<:raw:bytes", "t/corpus/$in"
     or die "error opening $in: $!";
-  my $in_text = do { local $/; <$in_fh> };
+  my $in_pod = do { local $/; <$in_fh> };
 
   open my $out_fh, "<:raw:bytes", "t/corpus/$out"
     or die "error opening $out: $!";
-  my $out_text = do { local $/; <$out_fh> };
+  my $want = do { local $/; <$out_fh> };
 
-  eq_or_diff(Pod_Identity->new->munge_perl_string($in_text), $out_text, $name);
+  my $have = Pod_Identity->new($arg ? $arg : ())->munge_perl_string($in_pod);
+
+  eq_or_diff($have, $want, $name);
 }
 
 test 'no END' => "simple.in.txt", "simple.out.txt";
