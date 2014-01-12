@@ -7,7 +7,6 @@ my $hello = 'world';
 Hello World
 
 =cut
-=cut
 
 __DATA__
 

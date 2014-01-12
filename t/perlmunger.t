@@ -1,8 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More 0.88;        # done_testing
-plan tests => 5;            # Comment this line out while adding tests
+use Test::More;
 
 # Load Test::Differences, if available:
 BEGIN {
@@ -56,5 +55,15 @@ test 'before and after END' => "straddle-end.in.txt", "straddle-end.out.txt";
 test 'extra whitespace' => "extra-ws.in.txt", "simple.out.txt";
 
 test 'DATA section' => "data-section.in.txt", "data-section.out.txt";
+
+test 'pod mid-code' => "mid-code.in.txt", "mid-code.out.txt";
+
+# We test for this separately because prior to Pod::Elemental 0.103, documents
+# would always stringify to add an extra =pod and =cut around the edges, which
+# was gross.  This test identified the bug, now fixed i Pod::Elemental.
+test 'pod mid-code, with =pod' => "mid-code-pod.in.txt", "mid-code-pod.out.txt";
+
+test 'pod mid-code, with =pod' => "mid-code.in.txt", "mid-code-comm.out.txt",
+     { replacer => 'replace_with_comment' };
 
 done_testing;
