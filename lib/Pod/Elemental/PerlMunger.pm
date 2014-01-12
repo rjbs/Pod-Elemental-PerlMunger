@@ -1,6 +1,7 @@
 package Pod::Elemental::PerlMunger;
-use Moose::Role;
 # ABSTRACT: a thing that takes a string of Perl and rewrites its documentation
+
+use Moose::Role;
 
 =head1 OVERVIEW
 
