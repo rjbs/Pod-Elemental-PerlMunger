@@ -34,148 +34,25 @@ sub test
 
   local $Test::Builder::Level = $Test::Builder::Level + 1;
 
-  eq_or_diff(Pod_Identity->new->munge_perl_string($in), $out, $name);
+  open my $in_fh, "<:raw:bytes", "t/corpus/$in"
+    or die "error opening $in: $!";
+  my $in_text = do { local $/; <$in_fh> };
+
+  open my $out_fh, "<:raw:bytes", "t/corpus/$out"
+    or die "error opening $out: $!";
+  my $out_text = do { local $/; <$out_fh> };
+
+  eq_or_diff(Pod_Identity->new->munge_perl_string($in_text), $out_text, $name);
 }
 
-#=====================================================================
-test 'POD after END' => <<'END IN 1', <<'END OUT 1';
-my $hello = 'world';
+test 'no END' => "simple.in.txt", "simple.out.txt";
 
-__END__
+test 'POD after END' => "after-end.txt", "simple.out.txt";
 
-=head1 NAME
+test 'before and after END' => "straddle-end.in.txt", "straddle-end.out.txt";
 
-Hello World
+test 'extra whitespace' => "extra-ws.in.txt", "simple.out.txt";
 
-END IN 1
-my $hello = 'world';
+test 'DATA section' => "data-section.in.txt", "data-section.out.txt";
 
-__END__
-
-=pod
-
-=head1 NAME
-
-Hello World
-
-=cut
-END OUT 1
-
-#---------------------------------------------------------------------
-test 'no END' => <<'END IN 2', <<'END OUT 2';
-my $hello = 'world';
-
-=head1 NAME
-
-Hello World
-
-END IN 2
-my $hello = 'world';
-
-__END__
-
-=pod
-
-=head1 NAME
-
-Hello World
-
-=cut
-END OUT 2
-
-#---------------------------------------------------------------------
-test 'before and after END' => <<'END IN 3', <<'END OUT 3';
-my $hello = 'world';
-
-=head1 NAME
-
-Hello World
-
-=cut
-
-__END__
-
-=head2 DESCRIPTION
-
-No biggie.
-
-END IN 3
-my $hello = 'world';
-
-__END__
-
-=pod
-
-=head1 NAME
-
-Hello World
-
-=cut
-
-=head2 DESCRIPTION
-
-No biggie.
-
-=cut
-END OUT 3
-
-#---------------------------------------------------------------------
-test 'extra whitespace' => <<'END IN 4', <<'END OUT 4';
-my $hello = 'world';
-
-
-
-__END__
-
-
-
-=head1 NAME
-
-Hello World
-
-END IN 4
-my $hello = 'world';
-
-__END__
-
-=pod
-
-=head1 NAME
-
-Hello World
-
-=cut
-END OUT 4
-
-#---------------------------------------------------------------------
-test 'DATA section' => <<'END IN 5', <<'END OUT 5';
-my $hello = 'world';
-
-=head1 NAME
-
-Hello World
-
-=cut
-
-__DATA__
-
-To be read.
-END IN 5
-my $hello = 'world';
-
-=pod
-
-=head1 NAME
-
-Hello World
-
-=cut
-=cut
-
-__DATA__
-
-To be read.
-END OUT 5
-
-#---------------------------------------------------------------------
 done_testing;
