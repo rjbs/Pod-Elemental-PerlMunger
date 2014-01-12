@@ -2,6 +2,11 @@ Revision history for {{$dist->name}}
 
 {{$NEXT}}
 
+0.200001  2014-01-12 15:46:22-05:00 America/New_York
+        - there's now also a post_code_replacer, used to generate replacements
+          for Pod removed after the final bits of code, in case you were only
+          worried about affecting code line numbers
+
 0.200000  2014-01-11 14:23:46-05:00 America/New_York
         - it's now possible to replace Pod with something rather than nothing
           when it's extracted from your document; check out the "replacer"
