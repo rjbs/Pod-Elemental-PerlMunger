@@ -44,7 +44,7 @@ C<%doc>.
 use namespace::autoclean;
 
 use Encode ();
-use List::AllUtils qw(any max);
+use List::Util 1.33 qw(any max);
 use Params::Util qw(_INSTANCE);
 use PPI;
 
