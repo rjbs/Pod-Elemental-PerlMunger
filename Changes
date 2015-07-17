@@ -2,6 +2,9 @@ Revision history for {{$dist->name}}
 
 {{$NEXT}}
 
+0.200003  2015-07-17 18:29:02-04:00 America/New_York
+        - replace use of List::AllUtils with List::Util
+
 0.200002  2014-03-20 19:13:01-04:00 America/New_York
         - the comment replacer now uses "#pod" not "#" to build replacement
           text, making it easier to strip out with grep (thanks, Karen
