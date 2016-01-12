@@ -169,8 +169,17 @@ around munge_perl_string => sub {
 
   s/\n\s*\z// for $new_perl, $new_pod;
 
+  my $new_end;
+  if (defined $end) {
+    $new_end = Encode::decode(
+      'utf-8',
+      $end,
+      Encode::FB_CROAK,
+    );
+  }
+
   return defined $end
-         ? "$new_perl\n\n$new_pod\n\n$end"
+         ? "$new_perl\n\n$new_pod\n\n$new_end"
          : "$new_perl\n\n__END__\n\n$new_pod\n";
 };
 
