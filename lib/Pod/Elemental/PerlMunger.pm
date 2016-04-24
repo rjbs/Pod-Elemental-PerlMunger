@@ -161,17 +161,26 @@ around munge_perl_string => sub {
 
   $doc->{ppi}->prune($end_finder);
 
-  my $new_perl = $doc->{ppi}->serialize;
+  my $new_perl = Encode::decode(
+    'utf-8',
+    $doc->{ppi}->serialize,
+    Encode::FB_CROAK,
+  );
 
   s/\n\s*\z// for $new_perl, $new_pod;
 
-  my $text = defined $end
-           ? "$new_perl\n\n$new_pod\n\n$end"
-           : "$new_perl\n\n__END__\n\n$new_pod\n";
+  my $new_end;
+  if (defined $end) {
+    $new_end = Encode::decode(
+      'utf-8',
+      $end,
+      Encode::FB_CROAK,
+    );
+  }
 
-  $text = Encode::decode('UTF-8', $text, Encode::FB_CROAK);
-
-  return $text;
+  return defined $end
+         ? "$new_perl\n\n$new_pod\n\n$new_end"
+         : "$new_perl\n\n__END__\n\n$new_pod\n";
 };
 
 =attr replacer
