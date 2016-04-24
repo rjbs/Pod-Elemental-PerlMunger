@@ -2,6 +2,10 @@ Revision history for {{$dist->name}}
 
 {{$NEXT}}
 
+0.200004  2016-04-24 10:50:23+01:00 Europe/London
+        - decode the fully new document, not just the Perl part
+          (thanks, van-de-bugger and perlancar)
+
 0.200003  2015-07-17 18:29:02-04:00 America/New_York
         - replace use of List::AllUtils with List::Util
 
