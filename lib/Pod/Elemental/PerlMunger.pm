@@ -19,9 +19,16 @@ this:
 
 C<$perl_string> should be a character string containing Perl source code.
 
-C<%arg> may contain any input for the underlying procedure.  The only key with
-associated meaning is C<filename> which may be omitted.  If given, it should be
-the name of the file whose contents are being munged.
+C<%arg> may contain any input for the underlying procedure.  Defined keys for
+C<%arg> are:
+
+=for :list
+= filename
+the name of the file whose contents are being munged; optional, used for error
+messages
+= no_strip_bom
+If given, the BOM character (U+FEFF) won't be stripped from the input.
+Probably best to leave this one off.
 
 The method will return a character string containing the rewritten and combined
 document.
