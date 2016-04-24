@@ -2,6 +2,9 @@ Revision history for {{$dist->name}}
 
 {{$NEXT}}
 
+0.200005  2016-04-24 16:17:30+01:00 Europe/London
+        - avoid double-decoding; new pod is already text
+
 0.200004  2016-04-24 10:50:23+01:00 Europe/London
         - decode the fully new document, not just the Perl part
           (thanks, van-de-bugger and perlancar)
