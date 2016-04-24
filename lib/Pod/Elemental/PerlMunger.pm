@@ -53,9 +53,9 @@ requires 'munge_perl_string';
 around munge_perl_string => sub {
   my ($orig, $self, $perl, $arg) = @_;
 
-  my $perl_utf8 = Encode::encode('utf-8', $perl, Encode::FB_CROAK);
+  $perl =~ s/^\x{FEFF}// unless $arg->{no_strip_bom};
 
-  my $ppi_document = PPI::Document->new(\$perl_utf8);
+  my $ppi_document = PPI::Document->new(\$perl);
   confess(PPI::Document->errstr) unless $ppi_document;
 
   my $last_code_elem;
@@ -127,8 +127,9 @@ around munge_perl_string => sub {
   # TODO: I should add a $weaver->weave_* like the Linewise methods to take the
   # input, get a Document, perform the stock transformations, and then weave.
   # -- rjbs, 2009-10-24
-  my $pod_str = join "\n", @pod_tokens;
-  my $pod_document = Pod::Elemental->read_string($pod_str);
+  my $pod_str  = join "\n", @pod_tokens;
+  my $pod_utf8 = Encode::encode('utf-8', $pod_str, Encode::FB_CROAK);
+  my $pod_document = Pod::Elemental->read_string($pod_utf8);
 
   my $doc = $self->$orig(
     {
@@ -161,25 +162,12 @@ around munge_perl_string => sub {
 
   $doc->{ppi}->prune($end_finder);
 
-  my $new_perl = Encode::decode(
-    'utf-8',
-    $doc->{ppi}->serialize,
-    Encode::FB_CROAK,
-  );
+  my $new_perl = $doc->{ppi}->serialize;
 
   s/\n\s*\z// for $new_perl, $new_pod;
 
-  my $new_end;
-  if (defined $end) {
-    $new_end = Encode::decode(
-      'utf-8',
-      $end,
-      Encode::FB_CROAK,
-    );
-  }
-
   return defined $end
-         ? "$new_perl\n\n$new_pod\n\n$new_end"
+         ? "$new_perl\n\n$new_pod\n\n$end"
          : "$new_perl\n\n__END__\n\n$new_pod\n";
 };
 
