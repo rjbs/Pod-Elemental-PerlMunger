@@ -2,6 +2,10 @@ Revision history for {{$dist->name}}
 
 {{$NEXT}}
 
+0.200006  2016-04-24 19:22:40+01:00 Europe/London
+        - strip leading BOM (well, U+FEFF) from input
+        - pass text, not bytes, to PPI
+
 0.200005  2016-04-24 16:17:30+01:00 Europe/London
         - avoid double-decoding; new pod is already text
 
