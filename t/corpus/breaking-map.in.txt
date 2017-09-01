@@ -1,0 +1,10 @@
+# Breaks Pod::Weaver:
+# return [ map { $i++ / 2 } (1..5) ];
+
+# Does not break Pod::Weaver:
+# return [ map { $i++ } (1..5) ];
+# return [ map { $i / 2 } (1..5) ];
+
+return [ map { $i++ / 2 } (1..5) ];
+
+=head1 HI MOM!
