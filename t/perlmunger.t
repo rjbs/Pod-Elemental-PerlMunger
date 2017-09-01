@@ -58,7 +58,7 @@ test 'DATA section' => "data-section.in.txt", "data-section.out.txt";
 
 test 'pod mid-code' => "mid-code.in.txt", "mid-code.out.txt";
 
-test 'offensive map' => "breaking-map.in.txt", "breaking-map.out.txt";
+test 'breaking map' => "breaking-map.in.txt", "breaking-map.out.txt";
 
 # We test for this separately because prior to Pod::Elemental 0.103, documents
 # would always stringify to add an extra =pod and =cut around the edges, which
