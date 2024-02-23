@@ -1,0 +1,10 @@
+# Breaks POD extraction:
+# return [ map { $i++ / 2 } (1..5) ];
+
+# Does not break POD extraction:
+# return [ map { $i++ } (1..5) ];
+# return [ map { $i / 2 } (1..5) ];
+
+return [ map { $i++ / 2 } (1..5) ];
+
+=head1 HI MOM!
